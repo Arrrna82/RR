@@ -1,0 +1,204 @@
+package homework8;
+
+interface Beverage {
+    String getDescription();
+    double cost();
+}
+
+class Espresso implements Beverage {
+    @Override
+    public String getDescription() {
+        return "Espresso";
+    }
+
+    @Override
+    public double cost() {
+        return 3.0;
+    }
+}
+
+class Tea implements Beverage {
+    @Override
+    public String getDescription() {
+        return "Tea";
+    }
+
+    @Override
+    public double cost() {
+        return 2.5;
+    }
+}
+
+abstract class BeverageDecorator implements Beverage {
+    protected Beverage beverage;
+
+    public BeverageDecorator(Beverage beverage) {
+        this.beverage = beverage;
+    }
+
+    @Override
+    public String getDescription() {
+        return beverage.getDescription();
+    }
+
+    @Override
+    public double cost() {
+        return beverage.cost();
+    }
+}
+
+class Milk extends BeverageDecorator {
+    public Milk(Beverage beverage) {
+        super(beverage);
+    }
+
+    @Override
+    public String getDescription() {
+        return beverage.getDescription() + ", Milk";
+    }
+
+    @Override
+    public double cost() {
+        return beverage.cost() + 0.5;
+    }
+}
+
+class Sugar extends BeverageDecorator {
+    public Sugar(Beverage beverage) {
+        super(beverage);
+    }
+
+    @Override
+    public String getDescription() {
+        return beverage.getDescription() + ", Sugar";
+    }
+
+    @Override
+    public double cost() {
+        return beverage.cost() + 0.2;
+    }
+}
+
+class WhippedCream extends BeverageDecorator {
+    public WhippedCream(Beverage beverage) {
+        super(beverage);
+    }
+
+    @Override
+    public String getDescription() {
+        return beverage.getDescription() + ", Whipped Cream";
+    }
+
+    @Override
+    public double cost() {
+        return beverage.cost() + 0.7;
+    }
+}
+
+class Latte implements Beverage {
+    @Override
+    public String getDescription() {
+        return "Latte";
+    }
+
+    @Override
+    public double cost() {
+        return 3.5;
+    }
+}
+
+class Mocha implements Beverage {
+    @Override
+    public String getDescription() {
+        return "Mocha";
+    }
+
+    @Override
+    public double cost() {
+        return 4.0;
+    }
+}
+
+class CafeOrder {
+    public static void main(String[] args) {
+        Beverage beverage = new Espresso();
+        beverage = new Milk(beverage);
+        beverage = new Sugar(beverage);
+        beverage = new WhippedCream(beverage);
+
+        System.out.println("Order: " + beverage.getDescription());
+        System.out.println("Total Cost: $" + beverage.cost());
+
+        Beverage latte = new Latte();
+        latte = new Sugar(latte);
+        latte = new Milk(latte);
+
+        System.out.println("Order: " + latte.getDescription());
+        System.out.println("Total Cost: $" + latte.cost());
+    }
+}
+
+
+package homework8;
+
+interface IPaymentProcessor {
+    void processPayment(double amount);
+}
+
+class PayPalPaymentProcessor implements IPaymentProcessor {
+    @Override
+    public void processPayment(double amount) {
+        System.out.println("Processing PayPal payment of: $" + amount);
+    }
+}
+
+class StripePaymentService {
+    public void makeTransaction(double totalAmount) {
+        System.out.println("Processing Stripe payment of: $" + totalAmount);
+    }
+}
+
+class StripePaymentAdapter implements IPaymentProcessor {
+    private StripePaymentService stripeService;
+
+    public StripePaymentAdapter(StripePaymentService stripeService) {
+        this.stripeService = stripeService;
+    }
+
+    @Override
+    public void processPayment(double amount) {
+        stripeService.makeTransaction(amount);
+    }
+}
+
+class AnotherPaymentService {
+    public void pay(double amount) {
+        System.out.println("Processing Another Payment Service of: $" + amount);
+    }
+}
+
+class AnotherPaymentAdapter implements IPaymentProcessor {
+    private AnotherPaymentService anotherService;
+
+    public AnotherPaymentAdapter(AnotherPaymentService anotherService) {
+        this.anotherService = anotherService;
+    }
+
+    @Override
+    public void processPayment(double amount) {
+        anotherService.pay(amount);
+    }
+}
+
+class PaymentSystem {
+    public static void main(String[] args) {
+        IPaymentProcessor paypalProcessor = new PayPalPaymentProcessor();
+        paypalProcessor.processPayment(100.0);
+
+        IPaymentProcessor stripeProcessor = new StripePaymentAdapter(new StripePaymentService());
+        stripeProcessor.processPayment(200.0);
+
+        IPaymentProcessor anotherProcessor = new AnotherPaymentAdapter(new AnotherPaymentService());
+        anotherProcessor.processPayment(150.0);
+    }
+}

@@ -1,0 +1,260 @@
+package prak8;
+
+import java.util.*;
+interface IReport {
+    String generate();
+}
+class SalesReport implements IReport {
+    @Override
+    public String generate() {
+        return "Sales report data";
+    }
+}
+class UserReport implements IReport {
+    @Override
+    public String generate() {
+        return "User report data";
+    }
+}
+abstract class ReportDecorator implements IReport {
+    protected IReport report;
+
+    public ReportDecorator(IReport report) {
+        this.report = report;
+    }
+
+    @Override
+    public String generate() {
+        return report.generate();
+    }
+}
+class DateFilterDecorator extends ReportDecorator {
+    private Date startDate;
+    private Date endDate;
+
+    public DateFilterDecorator(IReport report, Date startDate, Date endDate) {
+        super(report);
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    @Override
+    public String generate() {
+        return super.generate() + "\nAdd Date Filtering: " + startDate + "until" + endDate;
+    }
+}
+class SortingDecorator extends ReportDecorator {
+    private String sortBy;
+
+    public SortingDecorator(IReport report, String sortBy) {
+        super(report);
+        this.sortBy = sortBy;
+    }
+
+    @Override
+    public String generate() {
+        return super.generate() + "\nAdd Sort by: " + sortBy;
+    }
+}
+class CsvExportDecorator extends ReportDecorator {
+    public CsvExportDecorator(IReport report) {
+        super(report);
+    }
+
+    @Override
+    public String generate() {
+        return super.generate() + "\nExport to CSV format";
+    }
+}
+class PdfExportDecorator extends ReportDecorator {
+    public PdfExportDecorator(IReport report) {
+        super(report);
+    }
+
+    @Override
+    public String generate() {
+        return super.generate() + "\nExport to PDF";
+    }
+}
+
+class Client {
+    public static void main(String[] args) {
+        IReport salesReport = new SalesReport();
+        IReport userReport = new UserReport();
+
+        IReport decoratedReport = new DateFilterDecorator(
+                new SortingDecorator(
+                        new CsvExportDecorator(salesReport), "Date"),
+                new Date(2023, 1, 1),
+                new Date(2023, 12, 31)
+        );
+
+        System.out.println(decoratedReport.generate());
+
+        IReport complexReport = new PdfExportDecorator(
+                new SortingDecorator(
+                        new DateFilterDecorator(userReport, new Date(2023, 1, 1), new Date(2023, 12, 31)), "销售额")
+        );
+
+        System.out.println(complexReport.generate());
+    }
+}
+
+
+package prak8;
+
+import java.util.HashMap;
+import java.util.Map;
+
+interface IInternalDeliveryService {
+    void deliverOrder(String orderId);
+    String getDeliveryStatus(String orderId);
+    double calculateDeliveryCost(String orderId);
+}
+
+class InternalDeliveryService implements IInternalDeliveryService {
+    private Map<String, String> orders = new HashMap<>();
+
+    @Override
+    public void deliverOrder(String orderId) {
+        orders.put(orderId, "In Transit");
+        System.out.println("Internal Delivery Service: Order " + orderId + " is being delivered.");
+    }
+
+    @Override
+    public String getDeliveryStatus(String orderId) {
+        return orders.getOrDefault(orderId, "Unknown Order");
+    }
+
+    @Override
+    public double calculateDeliveryCost(String orderId) {
+        return 5.0;
+    }
+}
+
+class ExternalLogisticsServiceA {
+    public void shipItem(int itemId) {
+        System.out.println("External Service A: Shipping item " + itemId);
+    }
+
+    public String trackShipment(int shipmentId) {
+        return "Shipment " + shipmentId + " status from Service A.";
+    }
+
+    public double getShippingCost(int itemId) {
+        return 10.0;
+    }
+}
+
+class ExternalLogisticsServiceB {
+    public void sendPackage(String packageInfo) {
+        System.out.println("External Service B: Sending package with info: " + packageInfo);
+    }
+
+    public String checkPackageStatus(String trackingCode) {
+        return "Package " + trackingCode + " status from Service B.";
+    }
+
+    public double calculatePackageCost(String trackingCode) {
+        return 7.5;
+    }
+}
+
+class LogisticsAdapterA implements IInternalDeliveryService {
+    private ExternalLogisticsServiceA serviceA;
+    private Map<String, Integer> orderMap = new HashMap<>();
+
+    public LogisticsAdapterA(ExternalLogisticsServiceA serviceA) {
+        this.serviceA = serviceA;
+    }
+
+    @Override
+    public void deliverOrder(String orderId) {
+        int itemId = orderId.hashCode();
+        orderMap.put(orderId, itemId);
+        serviceA.shipItem(itemId);
+    }
+
+    @Override
+    public String getDeliveryStatus(String orderId) {
+        Integer shipmentId = orderMap.get(orderId);
+        if (shipmentId == null) {
+            return "Unknown Order";
+        }
+        return serviceA.trackShipment(shipmentId);
+    }
+
+    @Override
+    public double calculateDeliveryCost(String orderId) {
+        Integer itemId = orderMap.get(orderId);
+        return itemId != null ? serviceA.getShippingCost(itemId) : 0;
+    }
+}
+
+class LogisticsAdapterB implements IInternalDeliveryService {
+    private ExternalLogisticsServiceB serviceB;
+    private Map<String, String> packageMap = new HashMap<>();
+
+    public LogisticsAdapterB(ExternalLogisticsServiceB serviceB) {
+        this.serviceB = serviceB;
+    }
+
+    @Override
+    public void deliverOrder(String orderId) {
+        String packageInfo = "Package-" + orderId;
+        packageMap.put(orderId, packageInfo);
+        serviceB.sendPackage(packageInfo);
+    }
+
+    @Override
+    public String getDeliveryStatus(String orderId) {
+        String trackingCode = packageMap.get(orderId);
+        if (trackingCode == null) {
+            return "Unknown Order";
+        }
+        return serviceB.checkPackageStatus(trackingCode);
+    }
+
+    @Override
+    public double calculateDeliveryCost(String orderId) {
+        String trackingCode = packageMap.get(orderId);
+        return trackingCode != null ? serviceB.calculatePackageCost(trackingCode) : 0;
+    }
+}
+
+class DeliveryServiceFactory {
+    public static IInternalDeliveryService getDeliveryService(String serviceType) {
+        switch (serviceType) {
+            case "Internal":
+                return new InternalDeliveryService();
+            case "ExternalA":
+                return new LogisticsAdapterA(new ExternalLogisticsServiceA());
+            case "ExternalB":
+                return new LogisticsAdapterB(new ExternalLogisticsServiceB());
+            default:
+                throw new IllegalArgumentException("Unknown service type");
+        }
+    }
+}
+
+class Client1 {
+    public static void main(String[] args) {
+        IInternalDeliveryService internalService = DeliveryServiceFactory.getDeliveryService("Internal");
+        IInternalDeliveryService externalServiceA = DeliveryServiceFactory.getDeliveryService("ExternalA");
+        IInternalDeliveryService externalServiceB = DeliveryServiceFactory.getDeliveryService("ExternalB");
+
+        String orderId = "12345";
+
+        internalService.deliverOrder(orderId);
+        System.out.println(internalService.getDeliveryStatus(orderId));
+        System.out.println("Delivery Cost: " + internalService.calculateDeliveryCost(orderId));
+
+        externalServiceA.deliverOrder(orderId);
+        System.out.println(externalServiceA.getDeliveryStatus(orderId));
+        System.out.println("Delivery Cost: " + externalServiceA.calculateDeliveryCost(orderId));
+
+        externalServiceB.deliverOrder(orderId);
+        System.out.println(externalServiceB.getDeliveryStatus(orderId));
+        System.out.println("Delivery Cost: " + externalServiceB.calculateDeliveryCost(orderId));
+    }
+}
