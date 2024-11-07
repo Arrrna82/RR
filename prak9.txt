@@ -1,0 +1,270 @@
+package prak9;
+
+class RoomBookingSystem {
+    public void bookRoom(String guestName) {
+        System.out.println("Booking a room for " + guestName);
+    }
+
+    public void checkAvailability() {
+        System.out.println("Checking room availability.");
+    }
+
+    public void cancelBooking(String guestName) {
+        System.out.println("Cancelling room booking for " + guestName);
+    }
+}
+
+class RestaurantSystem {
+    public void reserveTable(String guestName) {
+        System.out.println("Reserving a table for " + guestName);
+    }
+
+    public void orderFood(String guestName, String food) {
+        System.out.println("Ordering " + food + " for " + guestName);
+    }
+
+    public void callTaxi(String guestName) {
+        System.out.println("Calling a taxi for " + guestName);
+    }
+}
+
+class EventManagementSystem {
+    public void bookConferenceRoom(String eventName) {
+        System.out.println("Booking a conference room for " + eventName);
+    }
+
+    public void arrangeEquipment(String eventName, String equipment) {
+        System.out.println("Arranging " + equipment + " for " + eventName);
+    }
+
+    public void cancelEvent(String eventName) {
+        System.out.println("Cancelling event " + eventName);
+    }
+}
+
+class CleaningService {
+    public void scheduleCleaning(String roomNumber) {
+        System.out.println("Scheduling cleaning for room " + roomNumber);
+    }
+
+    public void performCleaning(String roomNumber) {
+        System.out.println("Cleaning room " + roomNumber);
+    }
+}
+
+class HotelFacade {
+    private RoomBookingSystem roomBooking;
+    private RestaurantSystem restaurant;
+    private EventManagementSystem eventManagement;
+    private CleaningService cleaningService;
+
+    public HotelFacade() {
+        roomBooking = new RoomBookingSystem();
+        restaurant = new RestaurantSystem();
+        eventManagement = new EventManagementSystem();
+        cleaningService = new CleaningService();
+    }
+
+    public void bookRoomWithServices(String guestName, String food) {
+        roomBooking.bookRoom(guestName);
+        restaurant.orderFood(guestName, food);
+        cleaningService.scheduleCleaning("101");
+    }
+
+    public void organizeEventWithRooms(String eventName, String equipment) {
+        eventManagement.bookConferenceRoom(eventName);
+        eventManagement.arrangeEquipment(eventName, equipment);
+        roomBooking.checkAvailability();
+    }
+
+    public void reserveRestaurantWithTaxi(String guestName) {
+        restaurant.reserveTable(guestName);
+        restaurant.callTaxi(guestName);
+    }
+
+    public void cancelRoomBooking(String guestName) {
+        roomBooking.cancelBooking(guestName);
+    }
+
+    public void requestCleaning(String roomNumber) {
+        cleaningService.performCleaning(roomNumber);
+    }
+}
+
+class HotelManagementSystem {
+    public static void main(String[] args) {
+        HotelFacade hotelFacade = new HotelFacade();
+
+        hotelFacade.bookRoomWithServices("Alice", "Pizza");
+
+        System.out.println();
+
+        hotelFacade.organizeEventWithRooms("Tech Conference", "Projector");
+
+        System.out.println();
+
+        hotelFacade.reserveRestaurantWithTaxi("Bob");
+
+        System.out.println();
+
+        hotelFacade.cancelRoomBooking("Alice");
+
+        System.out.println();
+
+        hotelFacade.requestCleaning("101");
+    }
+}
+
+
+package prak9;
+import java.util.ArrayList;
+import java.util.List;
+
+abstract class OrganizationComponent {
+    protected String name;
+
+    public OrganizationComponent(String name) {
+        this.name = name;
+    }
+
+    public abstract void displayStructure();
+    public abstract double calculateBudget();
+    public abstract int countEmployees();
+    public String getName() {
+        return name;
+    }
+}
+
+class Employee extends OrganizationComponent {
+    private String position;
+    private double salary;
+
+    public Employee(String name, String position, double salary) {
+        super(name);
+        this.position = position;
+        this.salary = salary;
+    }
+
+    @Override
+    public void displayStructure() {
+        System.out.println("Employee: " + name + ", Position: " + position + ", Salary: $" + salary);
+    }
+
+    @Override
+    public double calculateBudget() {
+        return salary;
+    }
+
+    @Override
+    public int countEmployees() {
+        return 1;
+    }
+
+    public void setSalary(double salary) {
+        this.salary = salary;
+    }
+}
+
+class Department extends OrganizationComponent {
+    private List<OrganizationComponent> components = new ArrayList<>();
+
+    public Department(String name) {
+        super(name);
+    }
+
+    public void addComponent(OrganizationComponent component) {
+        components.add(component);
+    }
+
+    public void removeComponent(OrganizationComponent component) {
+        components.remove(component);
+    }
+
+    @Override
+    public void displayStructure() {
+        System.out.println("Department: " + name);
+        for (OrganizationComponent component : components) {
+            component.displayStructure();
+        }
+    }
+
+    @Override
+    public double calculateBudget() {
+        double totalBudget = 0;
+        for (OrganizationComponent component : components) {
+            totalBudget += component.calculateBudget();
+        }
+        return totalBudget;
+    }
+
+    @Override
+    public int countEmployees() {
+        int totalEmployees = 0;
+        for (OrganizationComponent component : components) {
+            totalEmployees += component.countEmployees();
+        }
+        return totalEmployees;
+    }
+
+    // 查找员工
+    public OrganizationComponent findEmployee(String employeeName) {
+        for (OrganizationComponent component : components) {
+            if (component.getName().equalsIgnoreCase(employeeName)) {
+                return component;
+            } else if (component instanceof Department) {
+                OrganizationComponent result = ((Department) component).findEmployee(employeeName);
+                if (result != null) return result;
+            }
+        }
+        return null;
+    }
+
+    public List<Employee> getAllEmployees() {
+        List<Employee> employees = new ArrayList<>();
+        for (OrganizationComponent component : components) {
+            if (component instanceof Employee) {
+                employees.add((Employee) component);
+            } else if (component instanceof Department) {
+                employees.addAll(((Department) component).getAllEmployees());
+            }
+        }
+        return employees;
+    }
+}
+
+class OrganizationStructure {
+    public static void main(String[] args) {
+        Department headOffice = new Department("Head Office");
+
+        Department itDepartment = new Department("IT Department");
+        Department hrDepartment = new Department("HR Department");
+
+        itDepartment.addComponent(new Employee("Heeseung", "Developer", 7000));
+        itDepartment.addComponent(new Employee("Niki", "System Administrator", 5000));
+        hrDepartment.addComponent(new Employee("Sunghoon", "HR Manager", 6000));
+        hrDepartment.addComponent(new Employee("Jungwoon", "Recruiter", 4000));
+
+        headOffice.addComponent(itDepartment);
+        headOffice.addComponent(hrDepartment);
+
+        System.out.println("Organization Structure:");
+        headOffice.displayStructure();
+
+        System.out.println("\nTotal Budget of Head Office: $" + headOffice.calculateBudget());
+
+        System.out.println("\nTotal Employees in Head Office: " + headOffice.countEmployees());
+
+        OrganizationComponent employee = headOffice.findEmployee("Heeseung");
+        if (employee != null) {
+            System.out.println("\nFound Employee: " + employee.getName());
+            employee.displayStructure();
+        } else {
+            System.out.println("\nEmployee not found.");
+        }
+
+        System.out.println("\nAll Employees in Head Office:");
+        for (Employee emp : headOffice.getAllEmployees()) {
+            emp.displayStructure();
+        }
+    }
+}
