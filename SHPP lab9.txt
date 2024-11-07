@@ -1,0 +1,173 @@
+package lab9;
+class AudioSystem {
+    public void turnOn() {
+        System.out.println("The sound system is on.");
+    }
+
+    public void setVolume(int level) {
+        System.out.println("The volume is set to:" + level);
+    }
+
+    public void turnOff() {
+        System.out.println("The sound system is off.");
+    }
+}
+
+class VideoProjector {
+    public void turnOn() {
+        System.out.println("The projector is turned on.");
+    }
+
+    public void setResolution(String resolution) {
+        System.out.println("The resolution is set to:" + resolution);
+    }
+
+    public void turnOff() {
+        System.out.println("The projector is off.");
+    }
+}
+
+class LightingSystem {
+    public void turnOn() {
+        System.out.println("The lighting system is on.");
+    }
+
+    public void setBrightness(int level) {
+        System.out.println("Brightness is set to:" + level);
+    }
+
+    public void turnOff() {
+        System.out.println("The lighting system is off.");
+    }
+}
+class HomeTheaterFacade {
+    private AudioSystem audioSystem;
+    private VideoProjector videoProjector;
+    private LightingSystem lightingSystem;
+
+    public HomeTheaterFacade(AudioSystem audioSystem, VideoProjector videoProjector, LightingSystem lightingSystem) {
+        this.audioSystem = audioSystem;
+        this.videoProjector = videoProjector;
+        this.lightingSystem = lightingSystem;
+    }
+
+    public void startMovie() {
+        System.out.println("Ready to play movie...");
+        lightingSystem.turnOn();
+        lightingSystem.setBrightness(5);
+        audioSystem.turnOn();
+        audioSystem.setVolume(8);
+        videoProjector.turnOn();
+        videoProjector.setResolution("high definition (photo, audio or television)");
+        System.out.println("The movie has begun to play!");
+    }
+
+    public void endMovie() {
+        System.out.println("End of the movie...");
+        videoProjector.turnOff();
+        audioSystem.turnOff();
+        lightingSystem.turnOff();
+        System.out.println("The movie is over.");
+    }
+}
+class Test {
+    public static void main(String[] args) {
+        AudioSystem audio = new AudioSystem();
+        VideoProjector video = new VideoProjector();
+        LightingSystem lights = new LightingSystem();
+
+        HomeTheaterFacade homeTheater = new HomeTheaterFacade(audio, video, lights);
+
+        homeTheater.startMovie();
+
+        System.out.println();
+
+        homeTheater.endMovie();
+    }
+}
+
+
+package lab9;
+import java.util.ArrayList;
+import java.util.List;
+
+abstract class FileSystemComponent {
+    protected String name;
+
+    public FileSystemComponent(String name) {
+        this.name = name;
+    }
+
+    public abstract void display(int depth);
+
+    public void add(FileSystemComponent component) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void remove(FileSystemComponent component) {
+        throw new UnsupportedOperationException();
+    }
+
+    public FileSystemComponent getChild(int index) {
+        throw new UnsupportedOperationException();
+    }
+}
+class File extends FileSystemComponent {
+
+    public File(String name) {
+        super(name);
+    }
+
+    @Override
+    public void display(int depth) {
+        System.out.println(" ".repeat(depth) + "- file: " + name);
+    }
+}
+
+class Directory extends FileSystemComponent {
+    private List<FileSystemComponent> children = new ArrayList<>();
+
+    public Directory(String name) {
+        super(name);
+    }
+
+    @Override
+    public void add(FileSystemComponent component) {
+        children.add(component);
+    }
+
+    @Override
+    public void remove(FileSystemComponent component) {
+        children.remove(component);
+    }
+
+    @Override
+    public FileSystemComponent getChild(int index) {
+        return children.get(index);
+    }
+
+    @Override
+    public void display(int depth) {
+        System.out.println(" ".repeat(depth) + "+ Catalog: " + name);
+        for (FileSystemComponent component : children) {
+            component.display(depth + 2);
+        }
+    }
+}
+class Main {
+    public static void main(String[] args) {
+        Directory root = new Directory("root directory");
+        File file1 = new File("file1.txt");
+        File file2 = new File("file2.txt");
+
+        Directory subDir = new Directory("subdirectories");
+        File subFile1 = new File("subfile1.txt");
+
+        root.add(file1);
+        root.add(file2);
+        subDir.add(subFile1);
+        root.add(subDir);
+
+        root.display(1);
+    }
+}
