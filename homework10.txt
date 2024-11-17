@@ -1,0 +1,368 @@
+package homework10;
+import java.util.ArrayList;
+import java.util.List;
+public class Book {
+    private String title;
+    private String author;
+    private String ISBN;
+    private boolean isAvailable;
+
+    public Book(String title, String author, String ISBN) {
+        this.title = title;
+        this.author = author;
+        this.ISBN = ISBN;
+        this.isAvailable = true;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public boolean isAvailable() {
+        return isAvailable;
+    }
+
+    public void markAsLoaned() {
+        isAvailable = false;
+    }
+
+    public void markAsAvailable() {
+        isAvailable = true;
+    }
+
+    @Override
+    public String toString() {
+        return title + " by " + author + " (ISBN: " + ISBN + ") - " +
+                (isAvailable ? "Available" : "Rented");
+    }
+}
+class Reader {
+    private String name;
+    private List<Book> borrowedBooks;
+    private static final int MAX_BORROW_LIMIT = 3;
+
+    public Reader(String name) {
+        this.name = name;
+        this.borrowedBooks = new ArrayList<>();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Book> getBorrowedBooks() {
+        return borrowedBooks;
+    }
+
+    public boolean borrowBook(Book book) {
+        if (borrowedBooks.size() < MAX_BORROW_LIMIT && book.isAvailable()) {
+            borrowedBooks.add(book);
+            book.markAsLoaned();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean returnBook(Book book) {
+        if (borrowedBooks.remove(book)) {
+            book.markAsAvailable();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return name + " has borrowed " + borrowedBooks.size() + " books.";
+    }
+}
+
+class Librarian {
+    private String name;
+
+    public Librarian(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void addBook(Library library, Book book) {
+        library.addBook(book);
+    }
+
+    public void removeBook(Library library, Book book) {
+        library.removeBook(book);
+    }
+}
+
+
+class Library {
+    private List<Book> books;
+
+    public Library() {
+        books = new ArrayList<>();
+    }
+
+    public void addBook(Book book) {
+        books.add(book);
+    }
+
+    public void removeBook(Book book) {
+        books.remove(book);
+    }
+
+    public List<Book> getAvailableBooks() {
+        List<Book> availableBooks = new ArrayList<>();
+        for (Book book : books) {
+            if (book.isAvailable()) {
+                availableBooks.add(book);
+            }
+        }
+        return availableBooks;
+    }
+
+    public List<Book> searchBooks(String query) {
+        List<Book> result = new ArrayList<>();
+        for (Book book : books) {
+            if (book.getTitle().toLowerCase().contains(query.toLowerCase()) ||
+                    book.getAuthor().toLowerCase().contains(query.toLowerCase())) {
+                result.add(book);
+            }
+        }
+        return result;
+    }
+
+    public List<Book> getAllBooks() {
+        return books;
+    }
+}
+
+
+class Main {
+    public static void main(String[] args) {
+        Library library = new Library();
+        Librarian librarian = new Librarian("Niki");
+
+        Book book1 = new Book("1984", "George Orwell", "12345");
+        Book book2 = new Book("To Kill a Mockingbird", "Harper Lee", "54321");
+        Book book3 = new Book("The Great Gatsby", "F. Scott Fitzgerald", "67890");
+        librarian.addBook(library, book1);
+        librarian.addBook(library, book2);
+        librarian.addBook(library, book3);
+
+        Reader reader = new Reader("Arna");
+
+        System.out.println("Available books:");
+        for (Book book : library.getAvailableBooks()) {
+            System.out.println(book);
+        }
+
+        System.out.println("\nArna is borrowing '1984':");
+        if (reader.borrowBook(book1)) {
+            System.out.println("Successfully borrowed!");
+        } else {
+            System.out.println("Failed to borrow.");
+        }
+
+        System.out.println("\nAll books:");
+        for (Book book : library.getAllBooks()) {
+            System.out.println(book);
+        }
+
+        System.out.println("\nArna is returning '1984':");
+        if (reader.returnBook(book1)) {
+            System.out.println("Successfully returned!");
+        } else {
+            System.out.println("Failed to return.");
+        }
+
+        System.out.println("\nAvailable books:");
+        for (Book book : library.getAvailableBooks()) {
+            System.out.println(book);
+        }
+    }
+}
+
+
+package homework10;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+public interface IUserManagementService {
+    boolean register(String username, String password);
+    boolean login(String username, String password);
+}
+
+interface IHotelService {
+    List<Hotel> searchHotels(String location, double maxPrice, String roomType);
+}
+
+interface IBookingService {
+    Booking createBooking(int userId, int hotelId, String roomType, String startDate, String endDate);
+}
+
+interface IPaymentService {
+    boolean processPayment(int bookingId, double amount, String paymentMethod);
+}
+
+interface INotificationService {
+    void sendNotification(int userId, String message);
+}
+
+class UserManagementService implements IUserManagementService {
+    private Map<String, String> users = new HashMap<>();
+
+    @Override
+    public boolean register(String username, String password) {
+        if (users.containsKey(username)) return false;
+        users.put(username, password);
+        return true;
+    }
+
+    @Override
+    public boolean login(String username, String password) {
+        return users.containsKey(username) && users.get(username).equals(password);
+    }
+}
+
+
+class HotelService implements IHotelService {
+    private List<Hotel> hotels = new ArrayList<>();
+
+    public HotelService() {
+        hotels.add(new Hotel(1, "Grand Hotel", "New York", "Deluxe", 200));
+        hotels.add(new Hotel(2, "Ocean View", "Miami", "Standard", 150));
+    }
+
+    @Override
+    public List<Hotel> searchHotels(String location, double maxPrice, String roomType) {
+        List<Hotel> result = new ArrayList<>();
+        for (Hotel hotel : hotels) {
+            if (hotel.getLocation().equalsIgnoreCase(location) &&
+                    hotel.getPrice() <= maxPrice &&
+                    hotel.getRoomType().equalsIgnoreCase(roomType)) {
+                result.add(hotel);
+            }
+        }
+        return result;
+    }
+}
+class BookingService implements IBookingService {
+    private List<Booking> bookings = new ArrayList<>();
+
+    @Override
+    public Booking createBooking(int userId, int hotelId, String roomType, String startDate, String endDate) {
+        Booking booking = new Booking(userId, hotelId, roomType, startDate, endDate);
+        bookings.add(booking);
+        return booking;
+    }
+}
+
+class PaymentService implements IPaymentService {
+    @Override
+    public boolean processPayment(int bookingId, double amount, String paymentMethod) {
+        System.out.println("Processing payment for booking ID: " + bookingId + ", Amount: $" + amount);
+        return true;
+    }
+}
+class NotificationService implements INotificationService {
+    @Override
+    public void sendNotification(int userId, String message) {
+        System.out.println("Sending notification to user " + userId + ": " + message);
+    }
+}
+
+class Hotel {
+    private int id;
+    private String name;
+    private String location;
+    private String roomType;
+    private double price;
+
+    public Hotel(int id, String name, String location, String roomType, double price) {
+        this.id = id;
+        this.name = name;
+        this.location = location;
+        this.roomType = roomType;
+        this.price = price;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public String getRoomType() {
+        return roomType;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    @Override
+    public String toString() {
+        return name + " in " + location + " (" + roomType + ") - $" + price;
+    }
+}
+
+class Booking {
+    private int userId;
+    private int hotelId;
+    private String roomType;
+    private String startDate;
+    private String endDate;
+
+    public Booking(int userId, int hotelId, String roomType, String startDate, String endDate) {
+        this.userId = userId;
+        this.hotelId = hotelId;
+        this.roomType = roomType;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+}
+
+class Test {
+    public static void main(String[] args) {
+        IUserManagementService userService = new UserManagementService();
+        IHotelService hotelService = new HotelService();
+        IBookingService bookingService = new BookingService();
+        IPaymentService paymentService = new PaymentService();
+        INotificationService notificationService = new NotificationService();
+
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Welcome to the Hotel Booking System");
+        System.out.print("Register your username: ");
+        String username = scanner.nextLine();
+        System.out.print("Register your password: ");
+        String password = scanner.nextLine();
+        userService.register(username, password);
+
+        System.out.println("Login to continue.");
+        System.out.print("Username: ");
+        String loginUsername = scanner.nextLine();
+        System.out.print("Password: ");
+        String loginPassword = scanner.nextLine();
+
+        if (userService.login(loginUsername, loginPassword)) {
+            System.out.println("Login successful!");
+            System.out.println("Searching hotels...");
+            hotelService.searchHotels("New York", 250, "Deluxe").forEach(System.out::println);
+
+            System.out.println("Creating booking...");
+            Booking booking = bookingService.createBooking(1, 1, "Deluxe", "2024-10-15", "2024-10-20");
+            paymentService.processPayment(1, 200, "Credit Card");
+            notificationService.sendNotification(1, "Your booking is confirmed!");
+        } else {
+            System.out.println("Invalid credentials.");
+        }
+    }
+}
