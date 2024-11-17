@@ -1,0 +1,194 @@
+package prak10;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+public interface IUser {
+    void register(String name, String email);
+    boolean login(String email);
+}
+abstract class User implements IUser {
+    private int id;
+    private String name;
+    private String email;
+
+    public User(int id, String name, String email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+
+    @Override
+    public void register(String name, String email) {
+        System.out.println(name + " Successfully registered!");
+    }
+
+    @Override
+    public boolean login(String email) {
+        System.out.println(email + " Log in successfully!");
+        return true;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getId() {
+        return id;
+    }
+}
+class Reader extends User {
+    private List<Book> borrowedBooks = new ArrayList<>();
+
+    public Reader(int id, String name, String email) {
+        super(id, name, email);
+    }
+
+    public void borrowBook(Book book) {
+        if (book.isAvailable()) {
+            borrowedBooks.add(book);
+            book.changeAvailabilityStatus(false);
+            System.out.println(getName() + " Borrowed 《" + book.getTitle() + "》");
+        } else {
+            System.out.println("《" + book.getTitle() + "》Currently unavailable!");
+        }
+    }
+
+    public void returnBook(Book book) {
+        borrowedBooks.remove(book);
+        book.changeAvailabilityStatus(true);
+        System.out.println(getName() + " Returned《" + book.getTitle() + "》");
+    }
+}
+class Librarian extends User {
+    public Librarian(int id, String name, String email) {
+        super(id, name, email);
+    }
+
+    public void addBook(Library library, Book book) {
+        library.addBook(book);
+        System.out.println("The librarian added new books:《" + book.getTitle() + "》");
+    }
+
+    public void removeBook(Library library, Book book) {
+        library.removeBook(book);
+        System.out.println("The librarian deleted the book:《" + book.getTitle() + "》");
+    }
+}
+class Book {
+    private String title;
+    private String isbn;
+    private String author;
+    private boolean isAvailable;
+
+    public Book(String title, String isbn, String author) {
+        this.title = title;
+        this.isbn = isbn;
+        this.author = author;
+        this.isAvailable = true;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public boolean isAvailable() {
+        return isAvailable;
+    }
+
+    public void changeAvailabilityStatus(boolean status) {
+        this.isAvailable = status;
+    }
+
+    @Override
+    public String toString() {
+        return "《" + title + "》, ISBN: " + isbn + ", Author: " + author;
+    }
+}
+
+class Author {
+    private String name;
+    private List<Book> books = new ArrayList<>();
+
+    public Author(String name) {
+        this.name = name;
+    }
+
+    public void addBook(Book book) {
+        books.add(book);
+    }
+
+    public List<Book> getBooks() {
+        return books;
+    }
+}
+
+class Loan {
+    private Book book;
+    private Reader reader;
+    private LocalDate loanDate;
+    private LocalDate returnDate;
+
+    public Loan(Book book, Reader reader, LocalDate loanDate) {
+        this.book = book;
+        this.reader = reader;
+        this.loanDate = loanDate;
+    }
+
+    public void returnBook(LocalDate returnDate) {
+        this.returnDate = returnDate;
+        System.out.println(reader.getName() + " At " + returnDate + " Returned《" + book.getTitle() + "》");
+    }
+}
+
+class Library {
+    private List<Book> books = new ArrayList<>();
+    private List<User> users = new ArrayList<>();
+
+    public void addBook(Book book) {
+        books.add(book);
+    }
+
+    public void removeBook(Book book) {
+        books.remove(book);
+    }
+
+    public List<Book> searchBook(String keyword) {
+        List<Book> result = new ArrayList<>();
+        for (Book book : books) {
+            if (book.getTitle().contains(keyword) || book.toString().contains(keyword)) {
+                result.add(book);
+            }
+        }
+        return result;
+    }
+
+    public void registerUser(User user) {
+        users.add(user);
+        System.out.println(user.getName() + " Have registered as a user.");
+    }
+}
+
+class Main {
+    public static void main(String[] args) {
+        Library library = new Library();
+
+        Librarian librarian = new Librarian(1, "Admin", "admin@library.com");
+        Book book1 = new Book("Java programming idea", "12345", "Bruce Eckel");
+        Book book2 = new Book("design pattern", "67890", "Erich Gamma");
+
+        librarian.addBook(library, book1);
+        librarian.addBook(library, book2);
+
+        Reader reader = new Reader(2, "Arna", "bolatarna82@gmail.com");
+        library.registerUser(reader);
+
+        reader.borrowBook(book1);
+
+        Loan loan = new Loan(book1, reader, LocalDate.now());
+        loan.returnBook(LocalDate.now().plusDays(7));
+
+        System.out.println("Search Results:");
+        library.searchBook("Java").forEach(System.out::println);
+    }
+}
