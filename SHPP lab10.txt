@@ -1,0 +1,354 @@
+package lab10;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+class Book {
+    private String title;
+    private String author;
+    private String isbn;
+    private boolean isAvailable;
+
+    public Book(String title, String author, String isbn) {
+        this.title = title;
+        this.author = author;
+        this.isbn = isbn;
+        this.isAvailable = true;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public boolean isAvailable() {
+        return isAvailable;
+    }
+
+    public void markAsLoaned() {
+        isAvailable = false;
+    }
+
+    public void markAsAvailable() {
+        isAvailable = true;
+    }
+
+    @Override
+    public String toString() {
+        return title + " by " + author + " (ISBN: " + isbn + ")";
+    }
+}
+
+class Reader {
+    private String id;
+    private String name;
+    private String email;
+
+    public Reader(String id, String name, String email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+
+    public Loan borrowBook(Book book) {
+        if (book.isAvailable()) {
+            Loan loan = new Loan(book, this);
+            loan.issueLoan();
+            return loan;
+        } else {
+            System.out.println("Book is not available for borrowing.");
+            return null;
+        }
+    }
+
+    public void returnBook(Loan loan) {
+        loan.completeLoan();
+    }
+
+    @Override
+    public String toString() {
+        return "Reader: " + name + " (ID: " + id + ", Email: " + email + ")";
+    }
+}
+
+class Librarian {
+    private String id;
+    private String name;
+    private String position;
+    private List<Book> libraryBooks = new ArrayList<>();
+    private List<Reader> readers = new ArrayList<>();
+
+    public Librarian(String id, String name, String position) {
+        this.id = id;
+        this.name = name;
+        this.position = position;
+    }
+
+    public void addBook(Book book) {
+        libraryBooks.add(book);
+        System.out.println("Book added: " + book);
+    }
+
+    public void removeBook(Book book) {
+        libraryBooks.remove(book);
+        System.out.println("Book removed: " + book);
+    }
+
+    public void registerReader(Reader reader) {
+        readers.add(reader);
+        System.out.println("Reader registered: " + reader);
+    }
+
+    public void removeReader(Reader reader) {
+        readers.remove(reader);
+        System.out.println("Reader removed: " + reader);
+    }
+}
+
+class Loan {
+    private Book book;
+    private Reader reader;
+    private Date loanDate;
+    private Date returnDate;
+
+    public Loan(Book book, Reader reader) {
+        this.book = book;
+        this.reader = reader;
+    }
+
+    public void issueLoan() {
+        book.markAsLoaned();
+        loanDate = new Date();
+        System.out.println("Loan issued for " + book + " to " + reader);
+    }
+
+    public void completeLoan() {
+        book.markAsAvailable();
+        returnDate = new Date();
+        System.out.println("Loan completed for " + book);
+    }
+
+    @Override
+    public String toString() {
+        return "Loan{book=" + book + ", reader=" + reader + ", loanDate=" + loanDate + ", returnDate=" + returnDate + '}';
+    }
+}
+
+class LibraryManagementSystem {
+    public static void main(String[] args) {
+        Librarian librarian = new Librarian("L001", "Niki", "Senior Librarian");
+
+        Book book1 = new Book("Java Programming", "John Smith", "12345");
+        Book book2 = new Book("Python Programming", "Jane Doe", "67890");
+
+        librarian.addBook(book1);
+        librarian.addBook(book2);
+
+        Reader reader = new Reader("R001", "Arna", "bolatarna82@gmail.com");
+        librarian.registerReader(reader);
+
+        Loan loan = reader.borrowBook(book1);
+
+        if (loan != null) {
+            reader.returnBook(loan);
+        }
+    }
+}
+
+package lab10;
+import java.util.*;
+import java.util.stream.Collectors;
+
+interface IUserService {
+    User register(String username, String password);
+    User login(String username, String password);
+}
+
+interface IProductService {
+    List<Product> getProducts();
+    Product addProduct(Product product);
+}
+
+interface IOrderService {
+    Order createOrder(int userId, List<Integer> productIds);
+    Order getOrderStatus(int orderId);
+}
+
+interface IPaymentService {
+    boolean processPayment(int orderId, double amount);
+}
+
+interface INotificationService {
+    void sendNotification(int userId, String message);
+}
+class User {
+    private String username;
+    private String password;
+
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+}
+
+class Product {
+    private static int idCounter = 1;
+    private int id;
+    private String name;
+    private double price;
+
+    public Product(String name, double price) {
+        this.id = idCounter++;
+        this.name = name;
+        this.price = price;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+}
+
+class Order {
+    private static int orderCounter = 1;
+    private int id;
+    private int userId;
+
+    private String status;
+
+    public Order(int userId,  String status) {
+        this.id = orderCounter++;
+        this.userId = userId;
+
+        this.status = status;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getStatus() {
+        return null;
+    }
+}
+
+class UserService implements IUserService {
+    private Map<String, User> users = new HashMap<>();
+
+    @Override
+    public User register(String username, String password) {
+        User user = new User(username, password);
+        users.put(username, user);
+        return user;
+    }
+
+    @Override
+    public User login(String username, String password) {
+        User user = users.get(username);
+        if (user != null && user.getPassword().equals(password)) {
+            return user;
+        }
+        throw new IllegalArgumentException("Invalid username or password");
+    }
+}
+class ProductService implements IProductService {
+    private List<Product> products = new ArrayList<>();
+
+    @Override
+    public List<Product> getProducts() {
+        return products;
+    }
+
+    @Override
+    public Product addProduct(Product product) {
+        products.add(product);
+        return product;
+    }
+}
+
+class OrderService implements IOrderService {
+    private final IProductService productService;
+    private final IPaymentService paymentService;
+    private final INotificationService notificationService;
+
+    public OrderService(IProductService productService, IPaymentService paymentService, INotificationService notificationService) {
+        this.productService = productService;
+        this.paymentService = paymentService;
+        this.notificationService = notificationService;
+    }
+
+    @Override
+    public Order createOrder(int userId, List<Integer> productIds) {
+        List<Product> products = productService.getProducts().stream()
+                .filter(p -> productIds.contains(p.getId()))
+                .collect(Collectors.toList());
+
+        if (products.isEmpty()) {
+            throw new IllegalArgumentException("No products found for the given IDs");
+        }
+
+        double totalAmount = products.stream().mapToDouble(Product::getPrice).sum();
+        Order order = new Order(userId,  "Created");
+
+        if (paymentService.processPayment(order.getId(), totalAmount)) {
+            order.setStatus("Paid");
+            notificationService.sendNotification(userId, "Your order has been paid successfully.");
+        } else {
+            order.setStatus("Payment Failed");
+            notificationService.sendNotification(userId, "Payment failed. Please try again.");
+        }
+        return order;
+    }
+
+    @Override
+    public Order getOrderStatus(int orderId) {
+        return new Order(orderId, "In Progress");
+    }
+}
+class PaymentService implements IPaymentService {
+    @Override
+    public boolean processPayment(int orderId, double amount) {
+        System.out.println("Processing payment for Order ID: " + orderId + " Amount: $" + amount);
+        return true;
+    }
+}
+class NotificationService implements INotificationService {
+    @Override
+    public void sendNotification(int userId, String message) {
+        System.out.println("Notification for User ID: " + userId + " - " + message);
+    }
+}
+
+class OrderManagementSystem {
+    public static void main(String[] args) {
+        IUserService userService = new UserService();
+        IProductService productService = new ProductService();
+        IPaymentService paymentService = new PaymentService();
+        INotificationService notificationService = new NotificationService();
+        IOrderService orderService = new OrderService(productService, paymentService, notificationService);
+
+        User user = userService.register("Arna", "Arna0321");
+        System.out.println("User registered: " + user.getUsername());
+
+        Product product1 = productService.addProduct(new Product("Laptop", 1200.0));
+        Product product2 = productService.addProduct(new Product("Smartphone", 800.0));
+
+        Order order = orderService.createOrder(user.getUsername().hashCode(), Arrays.asList(product1.getId(), product2.getId()));
+        System.out.println("Order created with status: " + order.getStatus());
+    }
+}
